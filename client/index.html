@@ -25,9 +25,12 @@
 
     <div id="app">
         <main class="container w-50">
+            <!-- USER NAME INPUT. -->
             <div class="col mb-2">
                 <input type="text" class="form-control" placeholder="What's your name ?" v-model="user_name" />
             </div>
+
+            <!-- MESSAGES LIST. -->
             <div class="messages border rounded rounded-1 mb-2 shadow p-5 overflow-auto">
                 <div class="mb-1" v-for="message in messages">
                     <strong>{{ message.user_name }}</strong> : {{
@@ -35,7 +38,7 @@
                 </div>
             </div>
 
-            <form class="">
+            <form>
                 <!-- SEND MESSAGE -->
                 <div class="mb-2 row">
                     <div class="col-6"></div>
