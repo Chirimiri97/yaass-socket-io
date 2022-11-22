@@ -1,4 +1,5 @@
 const messagesModel = require("../models/messages.model");
+const roomsModel = require("../models/rooms.model");
 
 
 
@@ -37,5 +38,19 @@ exports.saveMessage = async (message) => {
         await newMessage.save();
     } catch (err) {
         return err;
+    }
+};
+
+exports.addRoom = async (room_name) => {
+    try {
+        let result = await roomsModel.findOneAndUpdate(
+            { room_name, },
+            { $set: { room_name } },
+            { upsert: true, new: true },
+        );
+
+        return result;
+    } catch (err) {
+        return null;
     }
 };

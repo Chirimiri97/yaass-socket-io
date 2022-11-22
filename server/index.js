@@ -35,6 +35,16 @@ const connection = mongoose
 				}
 			});
 
+			// Add new room.
+			socket.on("add-room", async (room_name) => {
+				try {
+					let room = await allInOneController.addRoom(room_name);
+					io.emit("join-room", room._id);
+				} catch (err) {
+
+				}
+			});
+
 			// JOIN ROOM. Get all the chats in the room.
 			socket.on("join-room", async (room_name) => {
 				try {
