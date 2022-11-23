@@ -60,6 +60,8 @@ Vue.createApp({
 			if (user) {
                 this.auth = true;
                 this.user_data = user;
+
+                this.getAllUsers();
             }
 		});
 
@@ -79,7 +81,7 @@ Vue.createApp({
         // Add Room.
         this.socket.on("room-added", (room) => {
             if (room) {
-                this.all_rooms.push(room);
+                this.getRooms();
             } else {
                 console.log("Room not added!");
             }
@@ -95,13 +97,6 @@ Vue.createApp({
         // Add message.
         this.socket.on("message", (message) => {
             if (message) {
-                console.log(message.sender_id, this.user_data._id);
-                if (message.sender_id == this.user_data._id) {
-                    message.name = "You";
-                } else {
-                    message.name = this.room.user.user_name;
-                }
-
                 this.all_messages.push(message);
             }
         });
@@ -127,7 +122,6 @@ Vue.createApp({
             this.socket.emit("add-room", { sender_id: this.user_data._id, receiver_id: this.add_user });
         },
         getRooms() {
-            console.log("Calling this!");
             this.socket.emit("get-rooms", (this.user_data._id));
         },
         getMessages(room) {
@@ -144,8 +138,23 @@ Vue.createApp({
 				text: this.message_text,
 				sender_id: this.user_data._id,
                 room_id: this.room_id,
+                sender_name: this.user_data.user_name,
 			});
 			this.message_text = "";
 		},
+        resetComponent() {
+            this.auth = false;
+            this.login_state = true;
+            this.user_name = "";
+			this.email_id = "";
+            this.user_data = {};
+            this.all_users = [];
+            this.add_user = "";
+            this.all_rooms = [];
+            this.room_id = "";
+            this.room = {};
+			this.message_text = "";
+			this.all_messages = [];
+        }
 	},
 }).mount("#app");

@@ -11,9 +11,6 @@ let messageSchema = new Schema({
     sender_name: {
         type: String,
     },
-    receiver_name: {
-        type: String,
-    },
     text: {
         type: String,
     }

@@ -50,12 +50,10 @@ exports.getRooms = async (user_id) => {
             return el;
         });
 
-        console.log(rooms);
-
 		return rooms;
 	} catch (err) {
 		console.log(err.message);
-		throw new Error(err);
+		return null;
 	}
 };
 
@@ -71,6 +69,6 @@ exports.findRoom = async (data) => {
 
 		return room;
 	} catch (err) {
-		throw new Error(err);
+		return null;
 	}
 };
