@@ -1,14 +1,42 @@
 Vue.createApp({
 	data() {
 		return {
-			user_name: "",
-			message: "",
-			room_name: "",
-			messages: [],
+            auth: false,
+            login_state: true,
+            user_name: "",
+			email_id: "",
+            user_data: {},
+            all_users: [],
+            add_user: "",
+            all_rooms: [],
+            room_id: "",
+            room: {},
+			message_text: "",
+			all_messages: [],
 			socket: io("ws://localhost:3000"),
 		};
 	},
 	computed: {
+        login() {
+            return this.login_state;
+        },
+        notSignedIn() {
+            return !this.auth;
+        },
+        disableLoginButton() {
+            if (!this.email_id) {
+                return true;
+            }
+
+            return false;
+        },
+        disableSignUpButton() {
+            if (this.email_id && this.user_name) {
+                return false;
+            }
+
+            return true;
+        },
 		disableSendButton() {
 			if (this.message && this.user_name) {
 				return false;
@@ -18,39 +46,115 @@ Vue.createApp({
 		},
 	},
 	mounted() {
-		this.socket.on("message", (text) => {
-			this.messages.push(text);
+        // Get a user.
+        this.socket.on("user", (user) => {
+            if (user) {
+                this.auth = true;
+                this.user_data = user;
+                this.getAllUsers();
+            }
+        });
+
+        // Add a user.
+        this.socket.on("new-user-added", (user) => {
+			if (user) {
+                this.auth = true;
+                this.user_data = user;
+
+                this.getAllUsers();
+            }
 		});
 
-		this.socket.emit("get-public-messages");
+        // Get all users.
+        this.socket.on("all-users", (data) => {
+            if (data) {
+                this.all_users = data;
+            }
+        });
 
-		this.socket.on("get-public-messages", (data) => {
-			this.messages = data;
-		});
+		// Get all rooms.
+        this.socket.on("all-rooms", (rooms) => {
+            // console.log(rooms);
+            this.all_rooms = rooms;
+        });
 
-		this.socket.on("join-room", (data) => {
-			this.messages = data;
-		});
+        // Add Room.
+        this.socket.on("room-added", (room) => {
+            if (room) {
+                this.getRooms();
+            } else {
+                console.log("Room not added!");
+            }
+        });
+
+        // Get messages.
+        this.socket.on("messages", (messages) => {
+            if (messages) {
+                this.all_messages = messages;
+            }
+        });
+
+        // Add message.
+        this.socket.on("message", (message) => {
+            if (message) {
+                this.all_messages.push(message);
+            }
+        });
+
 	},
 	methods: {
-		sendMessage() {
-			this.socket.emit("message", {
-				message: this.message,
-				id: this.socket.id,
-				user_name: this.user_name,
-				room_name: this.room_name,
-			});
-			this.message = "";
+        loginUser() {
+            this.socket.emit("get-user", this.email_id);
+        },
+        signUpUser() {
+            this.socket.emit("add-new-user", { email_id: this.email_id, user_name: this.user_name });
+        },
+        getAllUsers() {
+            this.socket.emit("get-all-users", (this.user_data._id));
 
-			if (this.room_name) {
-				this.socket.emit("join-room", this.room_name);
-			} else {
-				this.socket.emit("get-public-messages");
-			}
+            this.getRooms();
+        },
+        addUser() {
+            if (!this.add_user) {
+                return;
+            }
+
+            this.socket.emit("add-room", { sender_id: this.user_data._id, receiver_id: this.add_user });
+        },
+        getRooms() {
+            this.socket.emit("get-rooms", (this.user_data._id));
+        },
+        getMessages(room) {
+            this.room_id = room._id;
+            this.room = room;
+            this.socket.emit("get-messages", (room._id));
+        },
+        sendMessage() {
+            if (!this.user_data || !this.room_id) {
+                return;
+            }
+
+			this.socket.emit("message", {
+				text: this.message_text,
+				sender_id: this.user_data._id,
+                room_id: this.room_id,
+                sender_name: this.user_data.user_name,
+			});
+			this.message_text = "";
 		},
-		joinRoom() {
-			console.log(this.room_name);
-			this.socket.emit("join-room", this.room_name);
-		},
+        resetComponent() {
+            this.auth = false;
+            this.login_state = true;
+            this.user_name = "";
+			this.email_id = "";
+            this.user_data = {};
+            this.all_users = [];
+            this.add_user = "";
+            this.all_rooms = [];
+            this.room_id = "";
+            this.room = {};
+			this.message_text = "";
+			this.all_messages = [];
+        }
 	},
 }).mount("#app");
