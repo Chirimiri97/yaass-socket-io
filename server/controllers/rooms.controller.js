@@ -1,42 +1,76 @@
 const roomsModel = require("../models/rooms.model");
+const usersModel = require("../models/users.model");
+const awaitEach = require("await-each");
 
 // Create Room.
-exports.createRoom = async (req, res) => {
-    try {
-        let new_room = new roomsModel({
-            members: [req.body.sender_id, req.body.receiver_id],
-        });
+exports.createRoom = async (data) => {
+	try {
+		const { sender_id, receiver_id } = data;
 
-        let room = await new_room.save();
+		let find_room = await roomsModel.findOne({
+			members: { $all: [sender_id, receiver_id] },
+		});
 
-        res.status(200).json(room);
-    } catch (err) {
-        res.status(500).json(err);
-    }
+		if (find_room) {
+			return null;
+		}
+
+		let new_room = new roomsModel({
+			members: [sender_id, receiver_id],
+		});
+
+		let room = await new_room.save();
+
+		return room;
+	} catch (err) {
+		throw new Error(err);
+	}
 };
 
 // Get rooms for user.
-exports.getRooms = async (req, res) => {
-    try {
-        let rooms = await roomsModel.find({
-            members: { $in: [req.params.user_id] },
+exports.getRooms = async (user_id) => {
+	try {
+		let result = await roomsModel.aggregate([
+			{
+				$match: { members: { $in: [user_id] } },
+			},
+			{
+				$unwind: "$members",
+			}
+		]);
+		result = result.filter(el => el["members"] != user_id);
+        
+        let rooms = await awaitEach(result, async (el) => {
+            let user = await usersModel.findOne({
+                _id: el.members
+            });
+
+            el.user = user;
+
+            return el;
         });
 
-        res.status(200).json(rooms);
-    } catch (err) {
-        res.status(500).json(err);
-    }
+        console.log(rooms);
+
+		return rooms;
+	} catch (err) {
+		console.log(err.message);
+		throw new Error(err);
+	}
 };
 
 // Find specific room.
-exports.findRoom = async (req, res) => {
-    try {
-        let room = await roomsModel.findOne({
-            members: { $all: [req.params.first_id, req.params.second_id] }
-        });
+exports.findRoom = async (data) => {
+	try {
+		const { first_id, second_id } = data;
+		let room = await roomsModel
+			.findOne({
+				members: { $all: [first_id, second_id] },
+			})
+			.sort({ _id: 1 });
 
-        res.status(200).json(room);
-    } catch (err) {
-        res.status(500).json(err);
-    }
+		return room;
+	} catch (err) {
+		throw new Error(err);
+	}
 };

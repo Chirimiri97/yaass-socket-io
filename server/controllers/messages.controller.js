@@ -1,31 +1,32 @@
 const messagesModel = require("../models/messages.model");
 
 // Add message.
-exports.addMessage = async (req, res) => {
+exports.addMessage = async (data) => {
     try {
-        let { room_id, sender_id, text } = req.body;
+        let { room_id, sender_id, text, sender_name, receiver_name } = data;
         let new_message = new messagesModel({
             room_id,
             sender_id,
             text,
+            sender_name,
+            receiver_name
         });
         let message = await new_message.save();
 
-        res.status(200).json(message);
+        return message;
     } catch (err) {
-        res.status(500).json(err);
+        return null;
     }
 };
 
-exports.getMessages = async (req, res) => {
+exports.getMessages = async (room_id) => {
     try {
-        const { room_id } = req.params;
         let messages = await messagesModel.find({
             room_id
         });
 
-        res.status(200).json(messages);
+        return messages;
     } catch (err) {
-        res.status(500).json(err);
+        return null;
     }
 };

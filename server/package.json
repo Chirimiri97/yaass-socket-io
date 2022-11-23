@@ -9,6 +9,7 @@
   "author": "Chirag Jain",
   "license": "ISC",
   "dependencies": {
+    "await-each": "^1.1.0",
     "dotenv": "^16.0.3",
     "mongoose": "^6.7.2",
     "nodemon": "^2.0.20",

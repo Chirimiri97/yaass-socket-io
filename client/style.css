@@ -18,8 +18,14 @@ body {
     font-family: 'Outfit', sans-serif;
     box-sizing: border-box;
     height: 100vh;
+    overflow-x: hidden;
 }
 
 .messages {
     height: 70vh;
+}
+
+#chat-container > section > section {
+    max-height: 80vh;
+    overflow-y: scroll;
 }
